@@ -88,7 +88,30 @@ Flowise will be available at `http://localhost:3000`
 ![Flowise Dashboard](images/flowise-dashboard.png)
 _Flowise dashboard interface_
 
-### Step 3: Import Custom Tool
+### Step 3: Set Up Environment Variables (Recommended)
+
+For better security, set up environment variables for your API keys:
+
+1. Copy the environment template:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your actual API keys:
+
+   ```bash
+   # .env file (this file is gitignored for security)
+   SPOONACULAR_API_KEY=your_actual_spoonacular_key_here
+   OPENAI_API_KEY=your_actual_openai_key_here
+   ```
+
+3. **Never commit the `.env` file** - it's already in `.gitignore`
+
+![Environment Setup](images/env-setup.png)
+_Setting up secure environment variables_
+
+### Step 4: Import Custom Tool
 
 Before configuring API keys, you need to import the Spoonacular tool:
 
@@ -100,9 +123,11 @@ Before configuring API keys, you need to import the Spoonacular tool:
 ![Import Tool](images/import-tool.png)
 _Importing the Spoonacular custom tool_
 
-### Step 4: Configure API Keys
+### Step 5: Configure API Keys
 
 #### Configure Spoonacular API Key:
+
+**Option A: Direct Configuration (Less Secure)**
 
 1. After importing the tool, edit the **spoonacular_recipe_finder** tool
 2. In the **Function** section, replace the existing API key:
@@ -110,6 +135,11 @@ _Importing the Spoonacular custom tool_
    const apiKey = "YOUR_SPOONACULAR_API_KEY_HERE";
    ```
 3. Save the tool configuration
+
+**Option B: Environment Variables (Recommended)**
+
+1. If using environment variables, reference them in your deployment
+2. For production deployments, use Flowise's credential management system
 
 ![Configure Spoonacular API](images/configure-spoonacular-api.png)
 _Configuring the Spoonacular API key in the custom tool_
@@ -124,7 +154,7 @@ _Configuring the Spoonacular API key in the custom tool_
 ![OpenAI Credentials](images/openai-credentials.png)
 _Adding OpenAI credentials in Flowise_
 
-### Step 5: Import the Agent Flow
+### Step 6: Import the Agent Flow
 
 1. In Flowise dashboard, click **"Import Chatflow"**
 2. Upload the `agent/Recipe Finder Agent Agents.json` file
@@ -133,7 +163,7 @@ _Adding OpenAI credentials in Flowise_
 ![Import Chatflow](images/import-chatflow.png)
 _Importing the Recipe Finder Agent chatflow_
 
-### Step 6: Link the Custom Tool
+### Step 7: Link the Custom Tool
 
 1. Open the imported chatflow
 2. Ensure the **Custom Tool** node is linked to the **Recipe Finder Agent**
@@ -207,6 +237,14 @@ The Spoonacular tool accepts:
 
 - **ingredients**: Comma-separated list of ingredients (e.g., "chicken, broccoli, garlic")
 
+## 🔐 Security Best Practices
+
+- **Never commit API keys** to version control
+- Use environment variables or Flowise credentials for production
+- Regularly rotate your API keys
+- Monitor API usage for unauthorized access
+- See [SECURITY.md](SECURITY.md) for detailed guidelines
+
 ## 🐛 Troubleshooting
 
 ![Debug Interface](images/debug-interface.png)
@@ -218,6 +256,7 @@ _Flowise debug interface showing execution logs_
 
    - Verify Spoonacular API key is valid and has available requests
    - Check OpenAI API key has sufficient credits
+   - Ensure `.env` file is properly configured (if using environment variables)
 
 2. **Tool Not Found**
 
