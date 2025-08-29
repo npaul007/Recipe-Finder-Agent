@@ -73,24 +73,9 @@ git clone https://github.com/yourusername/Recipe-Finder-Agent.git
 cd Recipe-Finder-Agent
 ```
 
-### Step 2: Start Flowise
+### Step 2: Set Up Environment Variables (REQUIRED BEFORE STARTING FLOWISE)
 
-```bash
-# Using npm installation
-npx flowise start
-
-# Or using Docker
-docker run -d --name flowise -p 3000:3000 flowiseai/flowise
-```
-
-Flowise will be available at `http://localhost:3000`
-
-![Flowise Dashboard](images/flowise-dashboard.png)
-_Flowise dashboard interface_
-
-### Step 3: Set Up Environment Variables (Recommended)
-
-For better security, set up environment variables for your API keys:
+**⚠️ CRITICAL: Configure environment variables BEFORE starting Flowise**
 
 1. Copy the environment template:
 
@@ -101,17 +86,89 @@ For better security, set up environment variables for your API keys:
 2. Edit `.env` with your actual API keys:
 
    ```bash
+   # Open .env in your preferred editor
+   nano .env
+   # or
+   code .env
+   ```
+
+3. Add your actual API keys to the `.env` file:
+
+   ```bash
    # .env file (this file is gitignored for security)
    SPOONACULAR_API_KEY=your_actual_spoonacular_key_here
    OPENAI_API_KEY=your_actual_openai_key_here
    ```
 
-3. **Never commit the `.env` file** - it's already in `.gitignore`
+4. **Verify your environment file**:
+   ```bash
+   # Check that your .env file exists and has the correct content
+   cat .env
+   ```
 
 ![Environment Setup](images/env-setup.png)
 _Setting up secure environment variables_
 
-### Step 4: Import Custom Tool
+### Step 3: Start Flowise with Environment Variables
+
+**⚠️ IMPORTANT: Flowise must be started with environment variables loaded**
+
+**Method A: Load environment variables and start Flowise (Recommended)**
+
+```bash
+# Load environment variables from .env file and start Flowise
+export $(cat .env | xargs) && npx flowise start
+
+# Verify variables are loaded before starting
+echo "Spoonacular API Key: $SPOONACULAR_API_KEY"
+echo "OpenAI API Key: $OPENAI_API_KEY"
+npx flowise start
+```
+
+**Method B: Using Docker with environment file**
+
+```bash
+# Using Docker with environment file (Recommended for Docker users)
+docker run -d \
+  --name flowise \
+  -p 3000:3000 \
+  --env-file .env \
+  flowiseai/flowise
+
+# Or with individual environment variables
+docker run -d \
+  --name flowise \
+  -p 3000:3000 \
+  -e SPOONACULAR_API_KEY="$(grep SPOONACULAR_API_KEY .env | cut -d '=' -f2)" \
+  -e OPENAI_API_KEY="$(grep OPENAI_API_KEY .env | cut -d '=' -f2)" \
+  flowiseai/flowise
+```
+
+**Method C: Manual export (Alternative)**
+
+```bash
+# Export variables manually
+export SPOONACULAR_API_KEY=your_actual_spoonacular_key_here
+export OPENAI_API_KEY=your_actual_openai_key_here
+
+# Then start Flowise
+npx flowise start
+```
+
+Flowise will be available at `http://localhost:3000`
+
+![Flowise Dashboard](images/flowise-dashboard.png)
+_Flowise dashboard interface with environment variables loaded_
+
+### Step 4: Verify Environment Variables in Flowise
+
+Before importing tools, verify that Flowise can access your environment variables:
+
+1. Check Flowise logs for environment variable loading
+2. In Flowise, you can test environment variable access in custom tools
+3. Ensure no errors related to missing environment variables
+
+### Step 5: Import Custom Tool
 
 Before configuring API keys, you need to import the Spoonacular tool:
 
@@ -123,23 +180,60 @@ Before configuring API keys, you need to import the Spoonacular tool:
 ![Import Tool](images/import-tool.png)
 _Importing the Spoonacular custom tool_
 
-### Step 5: Configure API Keys
+### Step 5: Configure API Keys in Tools
 
 #### Configure Spoonacular API Key:
 
-**Option A: Direct Configuration (Less Secure)**
+**Option A: Using Environment Variables (Recommended - if Flowise supports process.env)**
 
 1. After importing the tool, edit the **spoonacular_recipe_finder** tool
-2. In the **Function** section, replace the existing API key:
+2. In the **Function** section, update to use environment variables:
+
    ```javascript
-   const apiKey = "YOUR_SPOONACULAR_API_KEY_HERE";
+   const fetch = require("node-fetch");
+
+   async function fetchRecipe() {
+     // Try to get API key from environment variable first
+     const apiKey =
+       process.env.SPOONACULAR_API_KEY || "YOUR_SPOONACULAR_API_KEY_HERE";
+
+     if (!apiKey || apiKey === "YOUR_SPOONACULAR_API_KEY_HERE") {
+       throw new Error(
+         "SPOONACULAR_API_KEY environment variable not set. Please configure your API key."
+       );
+     }
+
+     const url = `https://api.spoonacular.com/recipes/findByIngredients?apiKey=${apiKey}&number=20&ingredients=${$ingredients}`;
+
+     try {
+       const response = await fetch(url);
+       const data = await response.json();
+
+       console.log("Recipe:", data[0]);
+       return JSON.stringify(data);
+     } catch (error) {
+       return "Error fetching recipe: " + error;
+     }
+   }
+
+   return fetchRecipe();
    ```
+
 3. Save the tool configuration
 
-**Option B: Environment Variables (Recommended)**
+**Option B: Direct Configuration (If environment variables don't work in Flowise)**
 
-1. If using environment variables, reference them in your deployment
-2. For production deployments, use Flowise's credential management system
+1. Replace the API key directly in the function:
+   ```javascript
+   const apiKey = "your_actual_spoonacular_key_here";
+   ```
+2. **⚠️ Security Risk**: Remember to remove the key before committing to version control
+
+**Option C: Flowise Credentials (Most Secure for Production)**
+
+1. Use Flowise's built-in credential management system
+2. Create a credential in Flowise settings
+3. Reference the credential in your tool function
 
 ![Configure Spoonacular API](images/configure-spoonacular-api.png)
 _Configuring the Spoonacular API key in the custom tool_
@@ -154,7 +248,7 @@ _Configuring the Spoonacular API key in the custom tool_
 ![OpenAI Credentials](images/openai-credentials.png)
 _Adding OpenAI credentials in Flowise_
 
-### Step 6: Import the Agent Flow
+### Step 7: Import the Agent Flow
 
 1. In Flowise dashboard, click **"Import Chatflow"**
 2. Upload the `agent/Recipe Finder Agent Agents.json` file
@@ -163,7 +257,7 @@ _Adding OpenAI credentials in Flowise_
 ![Import Chatflow](images/import-chatflow.png)
 _Importing the Recipe Finder Agent chatflow_
 
-### Step 7: Link the Custom Tool
+### Step 8: Link the Custom Tool
 
 1. Open the imported chatflow
 2. Ensure the **Custom Tool** node is linked to the **Recipe Finder Agent**
@@ -257,13 +351,40 @@ _Flowise debug interface showing execution logs_
    - Verify Spoonacular API key is valid and has available requests
    - Check OpenAI API key has sufficient credits
    - Ensure `.env` file is properly configured (if using environment variables)
+   - **Environment Variable Issues**:
+
+     ```bash
+     # Test if environment variables are loaded
+     echo $SPOONACULAR_API_KEY
+     echo $OPENAI_API_KEY
+
+     # Restart Flowise with environment variables
+     export $(cat .env | xargs) && npx flowise start
+     ```
 
 2. **Tool Not Found**
 
    - Ensure custom tool is properly imported and linked to the agent
    - Verify tool ID matches in the agent configuration
 
-3. **Flow Execution Errors**
+3. **Environment Variable Not Loading**
+
+   - Check that `.env` file exists in the same directory as Flowise startup
+   - Verify environment variables are exported before starting Flowise:
+
+     ```bash
+     # Check current environment
+     env | grep -E "(SPOONACULAR|OPENAI)"
+
+     # Reload and restart
+     source .env
+     npx flowise start
+     ```
+
+   - For Docker, ensure `--env-file .env` is used
+   - Check Flowise logs for environment-related errors
+
+4. **Flow Execution Errors**
    - Check all nodes are properly connected
    - Verify agent memory is configured if using stateful conversations
 
