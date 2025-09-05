@@ -280,7 +280,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Flowise](https://github.com/FlowiseAI/Flowise) - Low-code LLM apps builder
 - [Spoonacular API](https://spoonacular.com/food-api) - Recipe and nutrition data
 - [OpenAI](https://openai.com/) - GPT models for intelligent processing
-
----
-
-**Made with ❤️ to showcase AI proficiency and agent orchestration capabilities**
