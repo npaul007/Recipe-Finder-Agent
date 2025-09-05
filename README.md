@@ -171,12 +171,18 @@ _Importing the Recipe Finder Agent chatflow_
 
 ## 🎯 Usage
 
-### Example Query Format:
+### Testing via API
 
+You can also test the Recipe Finder Agent directly via API using curl:
+
+```bash
+curl http://localhost:3000/api/v1/prediction/868e8039-abb1-469c-b7e7-8c8c1032e8a2 \
+     -X POST \
+     -d '{"question": "I love chicken, broccoli, and rice. I am allergic to nuts and dairy. I want to build muscle and eat high-protein meals. Can you find me 5 healthy recipes?"}' \
+     -H "Content-Type: application/json"
 ```
-I love chicken, broccoli, and rice. I'm allergic to nuts and dairy.
-I want to build muscle and eat high-protein meals.
-```
+
+**Note**: Replace `868e8039-abb1-469c-b7e7-8c8c1032e8a2` with your actual chatflow ID from Flowise.
 
 ### Expected Response:
 
@@ -205,6 +211,12 @@ The agent will return a JSON object with 5 curated recipes:
   ]
 }
 ```
+
+#### How to find your Chatflow ID:
+
+1. Open your Recipe Finder Agent flow in Flowise
+2. Look at the URL in your browser - the ID is the long string at the end
+3. Or check the API endpoint shown in the Flowise interface
 
 ## 🐛 Troubleshooting
 
